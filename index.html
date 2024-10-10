@@ -1,5 +1,3 @@
-<!DOCTYPE html>
-<html lang="ja">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,7 +10,10 @@
       display: inline-block;
     }
   </style>
+  <!-- PeerJSのCDNを追加 -->
+  <script src="https://cdn.jsdelivr.net/npm/peerjs@1.3.1/dist/peerjs.min.js"></script>
 </head>
+
 <body>
   <h1>オンラインカードゲーム</h1>
   
@@ -27,6 +28,64 @@
     <div id="hand"></div>
   </div>
 
+<script>
+  const peer = new Peer(); // PeerJSの初期化
+  let conn;
+
+  peer.on('open', function(id) {
+    console.log('My peer ID is: ' + id);
+    document.getElementById('match-btn').addEventListener('click', function() {
+      const playerName = document.getElementById('name').value;
+      if (playerName) {
+        alert(playerName + "さん、マッチングを開始します！");
+
+        // 他のプレイヤーに接続するか、待機する
+        const peerId = prompt("対戦相手のIDを入力してください（待機する場合は空のままEnter）:");
+        if (peerId) {
+          // 他のプレイヤーに接続
+          conn = peer.connect(peerId);
+          conn.on('open', function() {
+            alert("対戦相手と接続しました！");
+            startGame();
+          });
+        } else {
+          // 接続を待機
+          peer.on('connection', function(c) {
+            conn = c;
+            alert("対戦相手が接続しました！");
+            startGame();
+          });
+        }
+      } else {
+        alert("名前を入力してください！");
+      }
+    });
+  });
+
+  function startGame() {
+    // ランダムに3枚のカードを手札に追加
+    const hand = document.getElementById('hand');
+    hand.innerHTML = '';
+    const cards = ["攻撃", "回復", "シールド", "特殊"];
+    
+    for (let i = 0; i < 3; i++) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerText = cards[Math.floor(Math.random() * cards.length)];
+      hand.appendChild(card);
+    }
+
+    // もし接続が成立していれば、データを相手に送信
+    if (conn) {
+      conn.send({ action: "startGame", hand: cards });
+      conn.on('data', function(data) {
+        console.log('相手のデータ: ', data);
+      });
+    }
+  }
+</script>
+
+  
   <script>
     const cards = ["攻撃", "回復", "シールド", "特殊"];
     
