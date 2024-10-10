@@ -3,10 +3,54 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Online Card Game</title>
+  <title>オンラインカードゲーム</title>
+  <style>
+    .card {
+      border: 1px solid black;
+      padding: 10px;
+      margin: 10px;
+      display: inline-block;
+    }
+  </style>
 </head>
 <body>
   <h1>オンラインカードゲーム</h1>
-  <p>準備中…</p>
+  
+  <!-- 名前入力とマッチングボタン -->
+  <label for="name">名前を入力してください:</label>
+  <input type="text" id="name" />
+  <button id="match-btn">マッチング開始</button>
+
+  <!-- カードを表示 -->
+  <div id="game">
+    <h2>あなたの手札</h2>
+    <div id="hand"></div>
+  </div>
+
+  <script>
+    const cards = ["攻撃", "回復", "シールド", "特殊"];
+    
+    function startGame() {
+      // ランダムに3枚のカードを手札に追加
+      const hand = document.getElementById('hand');
+      hand.innerHTML = '';
+      for (let i = 0; i < 3; i++) {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerText = cards[Math.floor(Math.random() * cards.length)];
+        hand.appendChild(card);
+      }
+    }
+
+    document.getElementById('match-btn').addEventListener('click', function() {
+      const playerName = document.getElementById('name').value;
+      if (playerName) {
+        alert(playerName + "さん、マッチングを開始します！");
+        startGame();
+      } else {
+        alert("名前を入力してください！");
+      }
+    });
+  </script>
 </body>
 </html>
