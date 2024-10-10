@@ -1,20 +1,20 @@
-const WebSocket = require('ws');
+const socket = new WebSocket('wss://online-card-game-replit.onrender.com');
 
-const wss = new WebSocket.Server({ port: process.env.PORT || 3000 });
+socket.onopen = () => {
+    console.log('サーバーに接続されました');
+};
 
-let clients = [];
+socket.onmessage = (event) => {
+    const data = JSON.parse(event.data);
 
-wss.on('connection', (ws) => {
-    clients.push(ws);
-    ws.on('message', (message) => {
-        clients.forEach(client => {
-            if (client !== ws && client.readyState === WebSocket.OPEN) {
-                client.send(message);
-            }
-        });
-    });
+    if (data.type === 'gameStarted') {
+        document.getElementById('gameInfo').innerText = 'ゲームが開始されました！';
+    } else if (data.type === 'error') {
+        alert(data.message);
+    }
+};
 
-    ws.on('close', () => {
-        clients = clients.filter(client => client !== ws);
-    });
+document.getElementById('startGame').addEventListener('click', () => {
+    // ゲーム開始のためのメッセージをサーバーに送信
+    socket.send(JSON.stringify({ type: 'startGame' }));
 });
