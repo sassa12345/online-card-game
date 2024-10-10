@@ -1,116 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>オンラインカードゲーム</title>
-  <style>
-    .card {
-      border: 1px solid black;
-      padding: 10px;
-      margin: 10px;
-      display: inline-block;
-    }
-  </style>
-  <!-- PeerJSのCDNを追加 -->
-  <script src="https://cdn.jsdelivr.net/npm/peerjs@1.3.1/dist/peerjs.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>オンラインカードゲーム</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        .card {
+            display: inline-block;
+            padding: 20px;
+            margin: 10px;
+            border: 1px solid #000;
+            cursor: pointer;
+        }
+    </style>
 </head>
-
 <body>
-  <h1>オンラインカードゲーム</h1>
-  
-  <!-- 名前入力とマッチングボタン -->
-  <label for="name">名前を入力してください:</label>
-  <input type="text" id="name" />
-  <button id="match-btn">マッチング開始</button>
+    <h1>オンラインカードゲーム</h1>
+    <p>名前を入力してください：</p>
+    <input type="text" id="name" placeholder="名前を入力">
+    <button id="match-btn">マッチング開始</button>
 
-  <!-- カードを表示 -->
-  <div id="game">
-    <h2>あなたの手札</h2>
+    <div id="game-info"></div>
+    <h2>手札</h2>
     <div id="hand"></div>
-  </div>
 
-<script>
-  const peer = new Peer(); // PeerJSの初期化
-  let conn;
+    <script>
+        const socket = new WebSocket('ws://[HerokuのアプリURL]:3000');
+        let playerName;
 
-  peer.on('open', function(id) {
-    console.log('My peer ID is: ' + id);
-    document.getElementById('match-btn').addEventListener('click', function() {
-      const playerName = document.getElementById('name').value;
-      if (playerName) {
-        alert(playerName + "さん、マッチングを開始します！");
-        
-        // ランダムなルームIDを生成（ここでは簡単に3桁の数字を使う例）
-        const roomId = Math.floor(Math.random() * 1000);
-        console.log('Generated Room ID: ' + roomId);
-        
-        // 他のプレイヤーがこのIDで接続を試みているか確認
-        conn = peer.connect('room-' + roomId);
-        conn.on('open', function() {
-          alert("対戦相手と接続しました！");
-          startGame();
+        document.getElementById('match-btn').addEventListener('click', function() {
+            playerName = document.getElementById('name').value;
+            if (playerName) {
+                document.getElementById('game-info').innerText = playerName + "さん、マッチング中...";
+                socket.send(JSON.stringify({ type: 'join', name: playerName }));
+            } else {
+                alert("名前を入力してください！");
+            }
         });
 
-        // 他のプレイヤーがいなければ自分が待機
-        peer.on('connection', function(c) {
-          conn = c;
-          alert("対戦相手が接続しました！");
-          startGame();
-        });
-      } else {
-        alert("名前を入力してください！");
-      }
-    });
-  });
+        socket.onmessage = function(event) {
+            const message = JSON.parse(event.data);
+            if (message.type === 'match') {
+                startGame(message.players);
+            }
+        };
 
-  function startGame() {
-    // ランダムに3枚のカードを手札に追加
-    const hand = document.getElementById('hand');
-    hand.innerHTML = '';
-    const cards = ["攻撃", "回復", "シールド", "特殊"];
-    
-    for (let i = 0; i < 3; i++) {
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.innerText = cards[Math.floor(Math.random() * cards.length)];
-      hand.appendChild(card);
-    }
-
-    // 接続が成立していれば、データを相手に送信
-    if (conn) {
-      conn.send({ action: "startGame", hand: cards });
-      conn.on('data', function(data) {
-        console.log('相手のデータ: ', data);
-      });
-    }
-  }
-</script>
-
-
-  
-  <script>
-    const cards = ["攻撃", "回復", "シールド", "特殊"];
-    
-    function startGame() {
-      // ランダムに3枚のカードを手札に追加
-      const hand = document.getElementById('hand');
-      hand.innerHTML = '';
-      for (let i = 0; i < 3; i++) {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerText = cards[Math.floor(Math.random() * cards.length)];
-        hand.appendChild(card);
-      }
-    }
-
-    document.getElementById('match-btn').addEventListener('click', function() {
-      const playerName = document.getElementById('name').value;
-      if (playerName) {
-        alert(playerName + "さん、マッチングを開始します！");
-        startGame();
-      } else {
-        alert("名前を入力してください！");
-      }
-    });
-  </script>
+        function startGame(players) {
+            document.getElementById('game-info').innerText = players.join('さんと') + "の対戦を開始します！";
+            const hand = document.getElementById('hand');
+            hand.innerHTML = '';
+            const cards = ["攻撃", "回復", "シールド", "特殊"];
+            
+            for (let i = 0; i < 3; i++) {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerText = cards[Math.floor(Math.random() * cards.length)];
+                hand.appendChild(card);
+            }
+        }
+    </script>
 </body>
 </html>
