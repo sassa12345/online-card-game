@@ -38,24 +38,24 @@
       const playerName = document.getElementById('name').value;
       if (playerName) {
         alert(playerName + "さん、マッチングを開始します！");
+        
+        // ランダムなルームIDを生成（ここでは簡単に3桁の数字を使う例）
+        const roomId = Math.floor(Math.random() * 1000);
+        console.log('Generated Room ID: ' + roomId);
+        
+        // 他のプレイヤーがこのIDで接続を試みているか確認
+        conn = peer.connect('room-' + roomId);
+        conn.on('open', function() {
+          alert("対戦相手と接続しました！");
+          startGame();
+        });
 
-        // 他のプレイヤーに接続するか、待機する
-        const peerId = prompt("対戦相手のIDを入力してください（待機する場合は空のままEnter）:");
-        if (peerId) {
-          // 他のプレイヤーに接続
-          conn = peer.connect(peerId);
-          conn.on('open', function() {
-            alert("対戦相手と接続しました！");
-            startGame();
-          });
-        } else {
-          // 接続を待機
-          peer.on('connection', function(c) {
-            conn = c;
-            alert("対戦相手が接続しました！");
-            startGame();
-          });
-        }
+        // 他のプレイヤーがいなければ自分が待機
+        peer.on('connection', function(c) {
+          conn = c;
+          alert("対戦相手が接続しました！");
+          startGame();
+        });
       } else {
         alert("名前を入力してください！");
       }
@@ -75,7 +75,7 @@
       hand.appendChild(card);
     }
 
-    // もし接続が成立していれば、データを相手に送信
+    // 接続が成立していれば、データを相手に送信
     if (conn) {
       conn.send({ action: "startGame", hand: cards });
       conn.on('data', function(data) {
@@ -84,6 +84,7 @@
     }
   }
 </script>
+
 
   
   <script>
