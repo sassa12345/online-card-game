@@ -2,67 +2,13 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>オンラインカードゲーム</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-        }
-        .card {
-            display: inline-block;
-            padding: 20px;
-            margin: 10px;
-            border: 1px solid #000;
-            cursor: pointer;
-        }
-    </style>
 </head>
 <body>
     <h1>オンラインカードゲーム</h1>
-    <p>名前を入力してください：</p>
-    <input type="text" id="name" placeholder="名前を入力">
-    <button id="match-btn">マッチング開始</button>
+    <button id="startGame">ゲーム開始</button>
+    <div id="gameInfo"></div>
 
-    <div id="game-info"></div>
-    <h2>手札</h2>
-    <div id="hand"></div>
-
-    <script>
-        const socket = new WebSocket('ws://[RenderのアプリURL]');
-        let playerName;
-
-        document.getElementById('match-btn').addEventListener('click', function() {
-            playerName = document.getElementById('name').value;
-            if (playerName) {
-                document.getElementById('game-info').innerText = playerName + "さん、マッチング中...";
-                socket.send(JSON.stringify({ type: 'join', name: playerName }));
-            } else {
-                alert("名前を入力してください！");
-            }
-        });
-
-        socket.onmessage = function(event) {
-            const message = JSON.parse(event.data);
-            if (message.type === 'match') {
-                startGame(message.players);
-            }
-        };
-
-        function startGame(players) {
-            document.getElementById('game-info').innerText = players.join('さんと') + "の対戦を開始します！";
-            const hand = document.getElementById('hand');
-            hand.innerHTML = '';
-            const cards = ["攻撃", "回復", "シールド", "特殊"];
-            
-            for (let i = 0; i < 3; i++) {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerText = cards[Math.floor(Math.random() * cards.length)];
-                hand.appendChild(card);
-            }
-        }
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>
